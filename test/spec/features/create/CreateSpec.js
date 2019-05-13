@@ -18,6 +18,8 @@ import {
   classes as svgClasses
 } from 'tiny-svg';
 
+import { getMid } from 'lib/layout/LayoutUtil';
+
 
 describe('features/create - Create', function() {
 
@@ -32,7 +34,7 @@ describe('features/create - Create', function() {
     ]
   }));
 
-  beforeEach(inject(function(dragging, elementRegistry) {
+  beforeEach(inject(function(dragging) {
     dragging.setOptions({ manual: true });
   }));
 
@@ -94,7 +96,7 @@ describe('features/create - Create', function() {
 
   describe('basics', function() {
 
-    it('should create', inject(function(create, elementRegistry, elementFactory, dragging) {
+    it('should create', inject(function(create, elementRegistry, dragging) {
 
       // given
       var parentGfx = elementRegistry.getGraphics('parentShape');
@@ -118,7 +120,7 @@ describe('features/create - Create', function() {
     }));
 
 
-    it('should append', inject(function(create, elementRegistry, elementFactory, dragging) {
+    it('should append', inject(function(create, elementRegistry, dragging) {
 
       // given
       var parentGfx = elementRegistry.getGraphics('parentShape');
@@ -143,7 +145,7 @@ describe('features/create - Create', function() {
     }));
 
 
-    it('should attach', inject(function(create, elementRegistry, elementFactory, dragging) {
+    it('should attach', inject(function(create, elementRegistry, dragging) {
 
       // given
       var hostShapeGfx = elementRegistry.getGraphics('hostShape');
@@ -163,7 +165,7 @@ describe('features/create - Create', function() {
     }));
 
 
-    it('should append + attach', inject(function(create, elementRegistry, elementFactory, dragging) {
+    it('should append + attach', inject(function(create, elementRegistry, dragging) {
 
       // given
       var hostShapeGfx = elementRegistry.getGraphics('hostShape');
@@ -190,7 +192,7 @@ describe('features/create - Create', function() {
 
   describe('visuals', function() {
 
-    it('should add visuals', inject(function(create, elementRegistry, dragging) {
+    it('should add visuals', inject(function(create, dragging) {
 
       // when
       create.start(canvasEvent({ x: 50, y: 50 }), newShape);
@@ -204,7 +206,7 @@ describe('features/create - Create', function() {
     }));
 
 
-    it('should remove visuals', inject(function(create, elementRegistry, dragging, eventBus) {
+    it('should remove visuals', inject(function(create, elementRegistry, dragging) {
       var parentGfx = elementRegistry.getGraphics('parentShape');
 
       // when
@@ -223,6 +225,7 @@ describe('features/create - Create', function() {
     }));
 
   });
+
 
   describe('display', function() {
 
@@ -271,6 +274,7 @@ describe('features/create - Create', function() {
     );
   });
 
+
   describe('cleanup', function() {
 
     it('should remove connection preview on dragging end', inject(function(create, elementRegistry, dragging) {
@@ -318,7 +322,7 @@ describe('features/create - Create', function() {
 
   describe('rules', function() {
 
-    it('should not allow shape create', inject(function(canvas, create, elementRegistry, dragging) {
+    it('should not allow shape create', inject(function(create, elementRegistry, dragging) {
       // given
       var targetGfx = elementRegistry.getGraphics('rootShape');
 
@@ -413,6 +417,80 @@ describe('features/create - Create', function() {
 
       expect(canvas.hasMarker(parentShape, 'new-parent')).to.be.false;
       expect(canvas.hasMarker(parentShape, 'new-parent')).not.to.eql(hasMarker);
+    }));
+
+  });
+
+
+  describe('constraints', function() {
+
+    beforeEach(inject(function(create, dragging, elementRegistry) {
+      // given
+      var parentGfx = elementRegistry.getGraphics('parentShape');
+
+      // when
+      create.start(canvasEvent({ x: 0, y: 0 }), newShape, {
+        createConstraints: {
+          top: 10,
+          right: 110,
+          bottom: 110,
+          left: 10
+        }
+      });
+
+      dragging.hover({ element: parentShape, gfx: parentGfx });
+    }));
+
+
+    it('top left', inject(function(dragging, elementRegistry) {
+
+      dragging.move(canvasEvent({ x: 0, y: 0 }));
+
+      dragging.end();
+
+      var createdShape = elementRegistry.get('newShape');
+
+      // then
+      expect(getMid(createdShape)).to.eql({ x: 10, y: 10 });
+    }));
+
+
+    it('top right', inject(function(dragging, elementRegistry) {
+
+      dragging.move(canvasEvent({ x: 120, y: 0 }));
+
+      dragging.end();
+
+      var createdShape = elementRegistry.get('newShape');
+
+      // then
+      expect(getMid(createdShape)).to.eql({ x: 110, y: 10 });
+    }));
+
+
+    it('left bottom', inject(function(dragging, elementRegistry) {
+
+      dragging.move(canvasEvent({ x: 0, y: 120 }));
+
+      dragging.end();
+
+      var createdShape = elementRegistry.get('newShape');
+
+      // then
+      expect(getMid(createdShape)).to.eql({ x: 10, y: 110 });
+    }));
+
+
+    it('right bottom', inject(function(dragging, elementRegistry) {
+
+      dragging.move(canvasEvent({ x: 120, y: 120 }));
+
+      dragging.end();
+
+      var createdShape = elementRegistry.get('newShape');
+
+      // then
+      expect(getMid(createdShape)).to.eql({ x: 110, y: 110 });
     }));
 
   });
